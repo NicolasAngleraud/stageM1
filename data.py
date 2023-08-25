@@ -146,6 +146,3 @@ def logs_reader(logs_file):
 def statistical_analysis(seeds, wiki):
     pass
 
-
-get_training_set()
-get_dev_test_sets()

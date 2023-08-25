@@ -2,7 +2,7 @@ import argparse
 import torch
 import wiktionary as wi
 import classifier as clf
-
+import data
 
 # supersenses acknowleged
 SUPERSENSES = ['act', 'animal', 'artifact', 'attribute', 'body', 'cognition',

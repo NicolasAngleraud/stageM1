@@ -357,7 +357,7 @@ class MostFrequentWiktionary(Baseline):
 
 class MostFrequentTrainingData(Baseline):
     def __init__(self, train_file):
-        self.train_file = train_file
+        self.file = train_file
 
     def training(self):
         supersense_dist = {supersense: 0 for supersense in SUPERSENSES}
