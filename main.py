@@ -145,6 +145,7 @@ if __name__ == '__main__':
                             clf.evaluation(dev_examples, classifier, DEVICE, file, supersense_dist,
                                            supersense_correct, hypersense_dist, hypersense_correct)
 
+                            """
                             sequoia_baseline = clf.MostFrequentSequoia(args.corpus_file)
                             train_baseline = clf.MostFrequentTrainingData(args.train_file)
                             wiki_baseline = clf.MostFrequentWiktionary(args.wiktionary_dump)
@@ -156,5 +157,5 @@ if __name__ == '__main__':
                             file.write(f"sequoia_baseline:{sequoia_baseline.evaluation(args.dev_file)};")
                             file.write(f"train_baseline:{train_baseline.evaluation(args.dev_file)};")
                             file.write(f"wiki_baseline:{wiki_baseline.evaluation(args.dev_file)};")
-
+                            """
                             file.write("\n")
