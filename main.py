@@ -1,12 +1,7 @@
-import pickle
-import random
-from collections import defaultdict
 import argparse
 import torch
 import wiktionary as wi
 import classifier as clf
-import data
-from sklearn.model_selection import train_test_split
 
 
 # supersenses acknowleged
