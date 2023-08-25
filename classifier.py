@@ -360,6 +360,7 @@ class MostFrequentTrainingData(Baseline):
         self.file = train_file
 
     def training(self):
+        """
         supersense_dist = {supersense: 0 for supersense in SUPERSENSES}
         with open(self.file, 'r', encoding="utf-8") as file:
             lines = file.readlines()
@@ -375,7 +376,8 @@ class MostFrequentTrainingData(Baseline):
             most_frequent_supersense = max(supersense_dist, key=supersense_dist.get)
 
             self.most_frequent_supersense = most_frequent_supersense
-            # self.most_frequent_supersense = 'artifact'
+            """
+        self.most_frequent_supersense = 'artifact'
 
     def evaluation(self, eval_file):
         correct_pred = 0
