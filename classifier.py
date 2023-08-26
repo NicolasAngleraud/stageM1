@@ -141,10 +141,9 @@ class SupersenseTagger(nn.Module):
 
         # Find the indices where predictions and gold classes differ
         error_indices = torch.nonzero(Y_pred != Y_gold).squeeze().to(DEVICE)
-        error_indices = error_indices.tolist()
 
-        correct_indices = torch.nonzero(Y_pred == Y_gold).squeeze().to(DEVICE)
-        correct_indices = correct_indices.tolist()
+        correct_indices = torch.nonzero(Y_pred != Y_gold).squeeze().to(DEVICE)
+
         # Get the predicted and gold classes for the errors
         if torch.numel(error_indices) > 0:
             errors = [(SUPERSENSES[Y_pred[i].item()], SUPERSENSES[Y_gold[i].item()]) for i in error_indices]
@@ -358,10 +357,9 @@ class MostFrequentWiktionary(Baseline):
 
 class MostFrequentTrainingData(Baseline):
     def __init__(self, train_file):
-        self.file = train_file
+        self.train_file = train_file
 
     def training(self):
-        """
         supersense_dist = {supersense: 0 for supersense in SUPERSENSES}
         with open(self.file, 'r', encoding="utf-8") as file:
             lines = file.readlines()
@@ -377,8 +375,7 @@ class MostFrequentTrainingData(Baseline):
             most_frequent_supersense = max(supersense_dist, key=supersense_dist.get)
 
             self.most_frequent_supersense = most_frequent_supersense
-            """
-        self.most_frequent_supersense = 'artifact'
+            # self.most_frequent_supersense = 'artifact'
 
     def evaluation(self, eval_file):
         correct_pred = 0
