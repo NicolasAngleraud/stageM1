@@ -144,13 +144,11 @@ class SupersenseTagger(nn.Module):
         error_indices = error_indices.tolist()
         if type(error_indices) == int:
             error_indices = [error_indices]
-        print(error_indices)
 
         correct_indices = torch.nonzero(Y_pred == Y_gold).squeeze().to(DEVICE)
         correct_indices = correct_indices.tolist()
         if type(correct_indices) == int:
             correct_indices = [correct_indices]
-        print(correct_indices)
         # Get the predicted and gold classes for the errors
         if len(error_indices) > 0:
             errors = [(SUPERSENSES[Y_pred[i].item()], SUPERSENSES[Y_gold[i].item()]) for i in error_indices]

@@ -127,9 +127,9 @@ if __name__ == '__main__':
                                                                                              dev=args.dev_file,
                                                                                              test=args.test_file)
 
-                    for lr in [0.005]:
+                    for lr in [0.0005]:
                     # for lr in [0.005, 0.001, 0.0005, 0.0001, 0.00005, 0.00001]:
-                        for patience in [5]:
+                        for patience in [10]:
 
                             hypersense_dist = {hypersense: 0 for hypersense in HYPERSENSES}
                             hypersense_correct = {hypersense: 0 for hypersense in HYPERSENSES}
