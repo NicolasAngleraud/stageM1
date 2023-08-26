@@ -141,16 +141,21 @@ class SupersenseTagger(nn.Module):
 
         # Find the indices where predictions and gold classes differ
         error_indices = torch.nonzero(Y_pred != Y_gold).squeeze().to(DEVICE)
+        print(error_indices)
+        error_indices = error_indices.tolist()
+        print(error_indices)
 
-        correct_indices = torch.nonzero(Y_pred != Y_gold).squeeze().to(DEVICE)
-
+        correct_indices = torch.nonzero(Y_pred == Y_gold).squeeze().to(DEVICE)
+        print(correct_indices)
+        correct_indices = correct_indices.tolist()
+        print(correct_indices)
         # Get the predicted and gold classes for the errors
-        if torch.numel(error_indices) > 0:
+        if len(error_indices) > 0:
             errors = [(SUPERSENSES[Y_pred[i].item()], SUPERSENSES[Y_gold[i].item()]) for i in error_indices]
         else:
             errors = []
 
-        if torch.numel(correct_indices) > 0:
+        if len(correct_indices) > 0:
             for i in correct_indices:
                 supersense = SUPERSENSES[Y_gold[i].item()]
                 supersense_correct[supersense] += 1
@@ -316,18 +321,16 @@ class MostFrequentSequoia(Baseline):
 
     def evaluation(self, eval_file):
         correct_pred = 0
-        with open(eval_file, 'r', encoding="utf-8") as file:
-            lines = file.readlines()
-            nb_examples = len(lines)
-            headers = lines[0]
-            for i, header in enumerate(headers):
-                if header == "supersense":
-                    supersense_index = i
-                    break
-            for line in lines[1:]:
-                supersense = line[supersense_index]
-                if supersense == self.most_frequent_supersense:
-                    correct_pred = + 1
+        nb_examples = 0
+
+        with open(eval_file, 'rb') as file:
+            eval_examples = pickle.load(file)
+
+        for example in eval_examples:
+            nb_examples += 1
+            if example['supersense'] == self.most_frequent_supersense:
+                correct_pred += 1
+
         return correct_pred / nb_examples
 
 
@@ -340,55 +343,46 @@ class MostFrequentWiktionary(Baseline):
 
     def evaluation(self, eval_file):
         correct_pred = 0
-        with open(eval_file, 'r', encoding="utf-8") as file:
-            lines = file.readlines()
-            nb_examples = len(lines)
-            headers = lines[0]
-            for i, header in enumerate(headers):
-                if header == "supersense":
-                    supersense_index = i
-                    break
-            for line in lines[1:]:
-                supersense = line[supersense_index]
-                if supersense == self.most_frequent_supersense:
-                    correct_pred = + 1
+        nb_examples = 0
+
+        with open(eval_file, 'rb') as file:
+            eval_examples = pickle.load(file)
+
+        for example in eval_examples:
+            nb_examples += 1
+            if example['supersense'] == self.most_frequent_supersense:
+                correct_pred += 1
+
         return correct_pred / nb_examples
 
 
 class MostFrequentTrainingData(Baseline):
     def __init__(self, train_file):
-        self.train_file = train_file
+        self.file = train_file
 
     def training(self):
         supersense_dist = {supersense: 0 for supersense in SUPERSENSES}
-        with open(self.file, 'r', encoding="utf-8") as file:
-            lines = file.readlines()
-            headers = lines[0]
-            for i, header in enumerate(headers):
-                if header == "supersense":
-                    supersense_index = i
-                    break
-            for line in lines[1:]:
-                supersense = line[supersense_index]
-                supersense_dist[supersense] += 1
 
-            most_frequent_supersense = max(supersense_dist, key=supersense_dist.get)
+        with open(self.file, 'rb') as file:
+            train_examples = pickle.load(file)
 
-            self.most_frequent_supersense = most_frequent_supersense
-            # self.most_frequent_supersense = 'artifact'
+        for example in train_examples:
+            supersense_dist[example['supersense']] += 1
+
+        most_frequent_supersense = max(supersense_dist, key=supersense_dist.get)
+        self.most_frequent_supersense = most_frequent_supersense
+        # self.most_frequent_supersense = 'artifact'
 
     def evaluation(self, eval_file):
         correct_pred = 0
-        with open(eval_file, 'r', encoding="utf-8") as file:
-            lines = file.readlines()
-            nb_examples = len(lines)
-            headers = lines[0]
-            for i, header in enumerate(headers):
-                if header == "supersense":
-                    supersense_index = i
-                    break
-            for line in lines[1:]:
-                supersense = line[supersense_index]
-                if supersense == self.most_frequent_supersense:
-                    correct_pred = + 1
-        return correct_pred/nb_examples
+        nb_examples = 0
+
+        with open(eval_file, 'rb') as file:
+            eval_examples = pickle.load(file)
+
+        for example in eval_examples:
+            nb_examples += 1
+            if example['supersense'] == self.most_frequent_supersense:
+                correct_pred += 1
+
+        return correct_pred / nb_examples
