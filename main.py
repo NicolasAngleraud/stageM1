@@ -1,8 +1,13 @@
+import pickle
+import random
+from collections import defaultdict
 import argparse
 import torch
 import wiktionary as wi
 import classifier as clf
 import data
+from sklearn.model_selection import train_test_split
+
 
 # supersenses acknowleged
 SUPERSENSES = ['act', 'animal', 'artifact', 'attribute', 'body', 'cognition',
@@ -112,6 +117,11 @@ if __name__ == '__main__':
         wiki_parser.parse_file()
 
     if args.main_mode == "classify":
+        train_examples, dev_examples, test_examples = clf.encoded_examples_split(args.definition_begins_with_lemma,
+                                                                                 train=args.train_file,
+                                                                                 dev=args.dev_file,
+                                                                                 test=args.test_file)
+
 
         # DEVICE setup
         device_id = args.device_id
@@ -122,11 +132,6 @@ if __name__ == '__main__':
         with open("logs_file.txt", 'w', encoding="utf-8") as file:
             for i in range(3):
                 for def_mode in ['definition', 'definition_with_lemma', 'definition_with_labels', 'definition_with_lemma_and_labels']:
-                    train_examples, dev_examples, test_examples = clf.encoded_examples_split(def_mode,
-                                                                                             train=args.train_file,
-                                                                                             dev=args.dev_file,
-                                                                                             test=args.test_file)
-
                     for lr in [0.005]:
                     # for lr in [0.005, 0.001, 0.0005, 0.0001, 0.00005, 0.00001]:
                         for patience in [5]:
@@ -145,7 +150,6 @@ if __name__ == '__main__':
                             clf.evaluation(dev_examples, classifier, DEVICE, file, supersense_dist,
                                            supersense_correct, hypersense_dist, hypersense_correct)
 
-                            """
                             sequoia_baseline = clf.MostFrequentSequoia(args.corpus_file)
                             train_baseline = clf.MostFrequentTrainingData(args.train_file)
                             wiki_baseline = clf.MostFrequentWiktionary(args.wiktionary_dump)
@@ -157,5 +161,5 @@ if __name__ == '__main__':
                             file.write(f"sequoia_baseline:{sequoia_baseline.evaluation(args.dev_file)};")
                             file.write(f"train_baseline:{train_baseline.evaluation(args.dev_file)};")
                             file.write(f"wiki_baseline:{wiki_baseline.evaluation(args.dev_file)};")
-                            """
+
                             file.write("\n")
