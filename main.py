@@ -164,4 +164,4 @@ if __name__ == '__main__':
 
                             file.write("\n")
 
-        warnings.resetwarnings()
+    warnings.resetwarnings()
