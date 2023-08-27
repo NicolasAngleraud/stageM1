@@ -121,7 +121,7 @@ if __name__ == '__main__':
 
         # Classification program
         with open("logs_file.txt", 'w', encoding="utf-8") as file:
-            for i in range(1):
+            for i in range(3):
                 for def_mode in ['definition', 'definition_with_lemma', 'definition_with_labels', 'definition_with_lemma_and_labels']:
                     train_examples, dev_examples, test_examples = clf.encoded_examples_split(def_mode,
                                                                                              train=args.train_file,
@@ -131,7 +131,9 @@ if __name__ == '__main__':
                     for lr in [0.005, 0.001, 0.0005, 0.0001, 0.00005, 0.00001]:
                         for patience in [10]:
 
-                            print(f"run {i} : lr = {lr}; mode = {def_mode}")
+                            print("")
+                            print(f"run {i+1} : lr = {lr}; mode = {def_mode}")
+                            print("")
 
                             hypersense_dist = {hypersense: 0 for hypersense in HYPERSENSES}
                             hypersense_correct = {hypersense: 0 for hypersense in HYPERSENSES}
