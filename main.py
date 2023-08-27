@@ -120,8 +120,9 @@ if __name__ == '__main__':
 
         # Classification program
         with open("logs_file.txt", 'w', encoding="utf-8") as file:
-            for i in range(1):
-                for def_mode in ['definition', 'definition_with_lemma', 'definition_with_labels', 'definition_with_lemma_and_labels']:
+            for i in range(2):
+                for def_mode in ['definition', 'definition_with_lemma']:
+                    # , 'definition_with_labels', 'definition_with_lemma_and_labels']:
                     train_examples, dev_examples, test_examples = clf.encoded_examples_split(def_mode,
                                                                                              train=args.train_file,
                                                                                              dev=args.dev_file,
