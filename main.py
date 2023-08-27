@@ -3,7 +3,6 @@ import torch
 import wiktionary as wi
 import classifier as clf
 import data
-import warnings
 
 
 # supersenses acknowleged
@@ -95,8 +94,6 @@ def get_parser_args():
 
 if __name__ == '__main__':
 
-    warnings.filterwarnings("ignore")
-
     args = get_parser_args()
 
     if args.main_mode == "parse":
@@ -163,5 +160,3 @@ if __name__ == '__main__':
                             file.write(f"wiki_baseline:{wiki_baseline.evaluation(args.dev_file)};")
 
                             file.write("\n")
-
-    warnings.resetwarnings()
