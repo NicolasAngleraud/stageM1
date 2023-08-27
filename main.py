@@ -3,6 +3,8 @@ import torch
 import wiktionary as wi
 import classifier as clf
 import data
+import warnings
+
 
 # supersenses acknowleged
 SUPERSENSES = ['act', 'animal', 'artifact', 'attribute', 'body', 'cognition',
@@ -93,6 +95,8 @@ def get_parser_args():
 
 if __name__ == '__main__':
 
+    warnings.filterwarnings("ignore")
+
     args = get_parser_args()
 
     if args.main_mode == "parse":
@@ -127,9 +131,10 @@ if __name__ == '__main__':
                                                                                              dev=args.dev_file,
                                                                                              test=args.test_file)
 
-                    for lr in [0.0005]:
-                    # for lr in [0.005, 0.001, 0.0005, 0.0001, 0.00005, 0.00001]:
+                    for lr in [0.005, 0.001, 0.0005, 0.0001, 0.00005, 0.00001]:
                         for patience in [10]:
+
+                            print(f"run {i} : lr = {lr}; mode = {def_mode}")
 
                             hypersense_dist = {hypersense: 0 for hypersense in HYPERSENSES}
                             hypersense_correct = {hypersense: 0 for hypersense in HYPERSENSES}
@@ -145,7 +150,6 @@ if __name__ == '__main__':
                             clf.evaluation(dev_examples, classifier, DEVICE, file, supersense_dist,
                                            supersense_correct, hypersense_dist, hypersense_correct)
 
-
                             sequoia_baseline = clf.MostFrequentSequoia(args.corpus_file)
                             train_baseline = clf.MostFrequentTrainingData(args.train_file)
                             wiki_baseline = clf.MostFrequentWiktionary(args.wiktionary_dump)
@@ -159,3 +163,5 @@ if __name__ == '__main__':
                             file.write(f"wiki_baseline:{wiki_baseline.evaluation(args.dev_file)};")
 
                             file.write("\n")
+
+        warnings.resetwarnings()
