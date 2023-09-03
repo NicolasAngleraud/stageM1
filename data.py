@@ -13,9 +13,7 @@ SUPERSENSES = ['act', 'animal', 'artifact', 'attribute', 'body', 'cognition',
                'quantity', 'relation', 'state', 'substance', 'time', 'groupxperson']
 
 
-def get_training_set(seeds_file_path="new_seeds_V2.txt", wiki_file="wiki_dump.pkl"):
-    with open(wiki_file, "rb") as file:
-        wiki = pickle.load(file)
+def get_training_set(seeds_file_path="train_data.txt"):
     with open(seeds_file_path, 'r', encoding="utf-8") as seeds_file:
         train = []
         # build dictionnary structures
@@ -26,38 +24,38 @@ def get_training_set(seeds_file_path="new_seeds_V2.txt", wiki_file="wiki_dump.pk
                 break
             sline = line.strip("\n").strip().split("\t")
             examples = []
-            labels = []
             for header, value in zip(headers, sline):
-                if header == "id_sense_wiki":
-                    sense_id = value
-                    if wiki.lexical_senses[sense_id].labels:
-                        labels = list(wiki.lexical_senses[sense_id].labels)
                 if header == "supersense":
                     supersense = value
                 if header == "lemma":
                     lemma = value
+                if header == "labels":
+                    labels = value
                 if header == "definition":
-                    value = value.replace("DEF:", "")
+
                     definition = value
+
                     definition_with_lemma = f"{lemma} : {value}"
-                    definition_with_labels = ""
+
                     if labels:
-                        for label in labels:
-                            definition_with_labels += f"({label}) "
+                        definition_with_labels = ""
+                        definition_with_labels += f"({labels}) "
                         definition_with_labels += value
-                    else:
-                        definition_with_labels = value
-                    definition_with_lemma_and_labels = f"{lemma} : "
-                    if labels:
-                        for label in labels:
-                            definition_with_lemma_and_labels += f"({label}) "
+
+                        definition_with_lemma_and_labels = f"{lemma} : "
+                        definition_with_lemma_and_labels += f"({labels}) "
                         definition_with_lemma_and_labels += value
                     else:
-                        definition_with_lemma_and_labels = f"{lemma} : {value}"
+                        definition_with_labels = ""
+                        definition_with_labels += value
+
+                        definition_with_lemma_and_labels = f"{lemma} : "
+                        definition_with_lemma_and_labels += value
+
                 if "example" in header:
                     if value:
-                        value = value.replace("EX:", "")
                         examples.append(value)
+
             if supersense in SUPERSENSES:
                 train_dic = {}
                 train_dic["definition"] = definition
@@ -67,58 +65,64 @@ def get_training_set(seeds_file_path="new_seeds_V2.txt", wiki_file="wiki_dump.pk
                 train_dic["examples"] = examples
                 train_dic["supersense"] = supersense
                 train.append(train_dic)
+
+                print(definition)
+                print(definition_with_lemma)
+                print(definition_with_labels)
+                print(definition_with_lemma_and_labels)
+                print(supersense)
+                print("")
+
         random.shuffle(train)
+
         # serialize the different structures created
         with open(f"train.pkl", "wb") as file:
             pickle.dump(train, file)
 
 
-def get_dev_test_sets(seeds_file_path="dev_test_data.txt", wiki_file="wiki_dump.pkl"):
-    with open(wiki_file, "rb") as file:
-        wiki = pickle.load(file)
+def get_dev_test_sets(eval_file_path="dev_test_data.txt"):
 
-    with open(seeds_file_path, 'r', encoding="utf-8") as seeds_file:
+    with open(eval_file_path, 'r', encoding="utf-8") as eval_file:
         dev_test = []
         # build dictionnary structures
-        headers = seeds_file.readline().strip("\n").strip().split("\t")
+        headers = eval_file.readline().strip("\n").strip().split("\t")
         while 1:
-            line = seeds_file.readline()
+            line = eval_file.readline()
             if not line:
                 break
             sline = line.strip("\n").strip().split("\t")
             examples = []
-            labels = []
             for header, value in zip(headers, sline):
-                if header == "id_sense_wiki":
-                    sense_id = value
-                    if wiki.lexical_senses[sense_id].labels:
-                        labels = list(wiki.lexical_senses[sense_id].labels)
                 if header == "supersense":
                     supersense = value
                 if header == "lemma":
                     lemma = value
+                if header == "labels":
+                    labels = value
                 if header == "definition":
-                    value = value.replace("DEF:", "")
                     definition = value
+
                     definition_with_lemma = f"{lemma} : {value}"
-                    definition_with_labels = ""
+
                     if labels:
-                        for label in labels:
-                            definition_with_labels += f"({label}) "
+                        definition_with_labels = ""
+                        definition_with_labels += f"({labels}) "
                         definition_with_labels += value
-                    else:
-                        definition_with_labels = value
-                    definition_with_lemma_and_labels = f"{lemma} : "
-                    if labels:
-                        for label in labels:
-                            definition_with_lemma_and_labels += f"({label}) "
+
+                        definition_with_lemma_and_labels = f"{lemma} : "
+                        definition_with_lemma_and_labels += f"({labels}) "
                         definition_with_lemma_and_labels += value
                     else:
-                        definition_with_lemma_and_labels = f"{lemma} : {value}"
+                        definition_with_labels = ""
+                        definition_with_labels += value
+
+                        definition_with_lemma_and_labels = f"{lemma} : "
+                        definition_with_lemma_and_labels += value
+
                 if "example" in header:
                     if value:
-                        value = value.replace("EX:", "")
                         examples.append(value)
+
             if supersense in SUPERSENSES:
                 dev_test_dic = {}
                 dev_test_dic["definition"] = definition
@@ -128,6 +132,13 @@ def get_dev_test_sets(seeds_file_path="dev_test_data.txt", wiki_file="wiki_dump.
                 dev_test_dic["examples"] = examples
                 dev_test_dic["supersense"] = supersense
                 dev_test.append(dev_test_dic)
+
+                print(definition)
+                print(definition_with_lemma)
+                print(definition_with_labels)
+                print(definition_with_lemma_and_labels)
+                print(supersense)
+                print("")
 
         # build id lists for classification sets
         dev, test = train_test_split(dev_test, test_size=0.5, random_state=42)
@@ -146,3 +157,7 @@ def logs_reader(logs_file):
 def statistical_analysis(train_data, dev_test_data, wiki):
     pass
 
+"""
+get_training_set()
+get_dev_test_sets()
+"""

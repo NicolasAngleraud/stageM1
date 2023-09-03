@@ -1,10 +1,12 @@
 import pickle
 import random
 from collections import defaultdict
-
+import string
+import wiktionary
 import openpyxl
 from sklearn.model_selection import train_test_split
 
+"""
 def get_supersenses_from_sequoia_lemma_in_sentence(lemma, sentence):
     supersenses_to_be_returned = set()
     index2supersense = {}
@@ -567,27 +569,6 @@ def get_data_sets(n=1, seeds_file_path="seeds.txt", wiki_file="wiki_dump.pkl"):
                 pickle.dump(test, file)
 
 
-    # TEST
-    """
-    train = "3_train.pkl"
-    dev = "3_dev.pkl"
-    test = "3_test.pkl"
-    id2data = "3_id2data.pkl"
-
-    with open(train, "rb") as file:
-        train_ids = pickle.load(file)
-    with open(dev, "rb") as file:
-        dev_ids = pickle.load(file)
-    with open(test, "rb") as file:
-        test_ids = pickle.load(file)
-    with open(id2data, "rb") as file:
-        id2data = pickle.load(file)
-
-    for k in train_ids[:2]:
-        print(id2data[k])
-    """
-
-
 def get_fixed_nb_examples_data_sets(n=100, seeds_file="seeds_checked_V3.txt"):
     id2def_supersense = {}
     id2defwithlemma_supersense = {}
@@ -641,3 +622,435 @@ def get_fixed_nb_examples_data_sets(n=100, seeds_file="seeds_checked_V3.txt"):
     with open(f"{n}_test.pkl", "wb") as file:
         pickle.dump(test, file)
     seeds_file.close()
+        
+
+def new_eval_data(nouns_file='/home/nangleraud/PycharmProjects/stageM1/common_lc_singular.txt', wiki_file='/home/nangleraud/PycharmProjects/stageM1/wiki_dump.pkl'):
+
+    alphabet = list(string.ascii_lowercase)
+
+    new_data = open("/home/nangleraud/PycharmProjects/stageM1/eval_data.txt", 'w', encoding="utf-8")
+    nouns = []
+
+    with open(wiki_file, "rb") as file:
+        wiki = pickle.load(file)
+        pages = wiki.pages
+
+    with open(nouns_file, 'r', encoding="utf-8") as file:
+        lines = file.readlines()
+
+    for line in lines:
+        sline = line.strip()
+        if sline in (alphabet+['%', '*', '$']):
+            continue
+        else:
+            if (not sline.endswith('s')) and (not sline.endswith('x')):
+                nouns.append(sline)
+            else:
+                if sline[:-1] in pages:
+                    nouns.append(sline[:-1])
+                else:
+                    nouns.append(sline)
+
+    random.shuffle(nouns)
+
+    for noun in nouns:
+        lemma = noun
+        if noun in pages:
+            if pages[noun].entry_ids:
+                entry_id = random.choice(pages[noun].entry_ids)
+                entry = wiki.lexical_entries[entry_id]
+                if entry.sense_ids:
+                    sense_id = random.choice(entry.sense_ids)
+                    sense = wiki.lexical_senses[sense_id]
+                    definition = sense.definition
+                    if definition:
+
+                        examples = sense.examples
+                        sexamples = ""
+                        for example in examples:
+                            sexamples += example
+                            sexamples += "\t"
+                        sexamples = sexamples.strip("\t")
+
+                        labels = sense.labels
+                        slabels = ""
+                        if labels:
+                            for label in labels:
+                                slabels += label
+                                slabels += ";"
+                            slabels = slabels.strip(";")
+
+                        synonyms = sense.synonyms
+                        ssynonyms = ""
+                        if synonyms:
+                            for synonym in synonyms:
+                                ssynonyms += synonym
+                                ssynonyms += ";"
+                            ssynonyms = ssynonyms.strip(";")
+
+                        new_data.write(lemma + "\t")
+                        new_data.write("\t")
+                        new_data.write(entry_id + "\t")
+                        new_data.write(sense_id + "\t")
+                        new_data.write(slabels + "\t")
+                        new_data.write(ssynonyms + "\t")
+                        new_data.write(definition + "\t")
+                        new_data.write(sexamples)
+                        new_data.write("\n")
+
+    new_data.close()
+
+
+
+def eval_data_1200(eval_file='eval_data.txt'):
+    with open(eval_file, 'r', encoding="utf-8") as file:
+        lines = file.readlines()
+
+    file = open("eval_data_1200.txt", 'w', encoding="utf-8")
+
+    for line in lines[:1201]:
+        file.write(line)
+
+    file.close()
+
+
+
+
+
+def new_train():
+    train_file = open("new_seeds_V2.txt", 'r', encoding="utf-8")
+    new_train_file = open("train_data.txt", 'w', encoding="utf-8")
+
+    lines = train_file.readlines()
+    train_headers = lines[0]
+    print(train_headers)
+    train_headers = train_headers.strip("\t").split('\t')
+    print(train_headers)
+
+    for i, header in enumerate(train_headers):
+        if header == "ambiguous":
+            supp_index = i
+    first_line = ""
+    for header in train_headers:
+        if header != "ambiguous":
+            first_line += (header + "\t")
+    new_train_file.write(first_line)
+
+    for line in lines[1:]:
+        els = line.strip("\t").split("\t")
+        els.pop(supp_index)
+        print(els)
+        new_line = ""
+        for el in els:
+            el = el.strip().strip("DEF:").strip("EX:")
+            new_line += el
+            new_line += "\t"
+        new_train_file.write(new_line)
+
+    train_file.close()
+    new_train_file.close()
+
+
+def eval_data_1200(eval_file='eval_data.txt'):
+    with open(eval_file, 'r', encoding="utf-8") as file:
+        lines = file.readlines()
+
+    file = open("eval_data_1200.txt", 'w', encoding="utf-8")
+
+    for line in lines[:1201]:
+        file.write(line)
+
+    file.close()
+
+
+eval_data_1200()
+
+
+import pandas as pd
+
+# Define the input XLSX file and output TXT file paths
+xlsx_file = 'eval_data_1200_annotated.xlsx'
+txt_file = 'eval_data.txt'
+
+# Read the XLSX file into a pandas DataFrame
+df = pd.read_excel(xlsx_file, engine='openpyxl')
+
+# Filter rows where the "commentaire" column is equal to "ok"
+df_filtered = df[df['commentaire'] == 'ok']
+
+# Create a tab-separated TXT file with the same structure
+df_filtered.to_csv(txt_file, sep='\t', index=False, header=True)
+
+print(f"Filtered data has been saved to {txt_file}")
+
+
+old_eval_data = open("eval_data.txt", 'r', encoding="utf-8")
+train_data = open("new_seeds_V2.txt", 'r', encoding="utf-8")
+eval_data = open("new_train.txt", 'r', encoding="utf-8")
+
+old_eval_sense_ids = []
+eval_sense_ids = []
+train_sense_ids = []
+supp_sense_ids = []
+
+eval_lines = eval_data.readlines()
+headers = eval_lines[0].strip().split("\t")
+for line in eval_lines[1:]:
+    for i, el in enumerate(line.strip().split("\t")):
+        if i < len(headers):
+            if headers[i] == "id_sense_wiki":
+                eval_sense_ids.append(el)
+
+train_lines = train_data.readlines()
+headers = train_lines[0].strip().split("\t")
+for line in train_lines[1:]:
+    for i, el in enumerate(line.strip().split("\t")):
+        if i < len(headers):
+            if headers[i] == "id_sense_wiki":
+                train_sense_ids.append(el)
+
+old_eval_lines = old_eval_data.readlines()
+headers = old_eval_lines[0].strip().split("\t")
+for line in old_eval_lines[1:]:
+    for i, el in enumerate(line.strip().split("\t")):
+        if i < len(headers):
+            if headers[i] == "id_sense_wiki":
+                old_eval_sense_ids.append(el)
+
+for sense_id in old_eval_sense_ids:
+    if sense_id in eval_sense_ids:
+        supp_sense_ids.append(sense_id)
+    elif sense_id in train_sense_ids:
+        supp_sense_ids.append(sense_id)
+
+eval_data.close()
+train_data.close()
+old_eval_data.close()
+
+print(len(supp_sense_ids))
+"""
+"""
+old_eval_data = open("eval_data.txt", 'r', encoding="utf-8")
+train_data = open("new_seeds_V2.txt", 'r', encoding="utf-8")
+eval_data = open("new_train.txt", 'r', encoding="utf-8")
+
+old_eval_sense_ids = []
+eval_sense_ids = []
+train_sense_ids = []
+supp_sense_ids = []
+
+eval_lines = eval_data.readlines()
+headers = eval_lines[0].strip().split("\t")
+for line in eval_lines[1:]:
+    for i, el in enumerate(line.strip().split("\t")):
+        if i < len(headers):
+            if headers[i] == "id_sense_wiki":
+                eval_sense_ids.append(el)
+
+train_lines = train_data.readlines()
+headers = train_lines[0].strip().split("\t")
+for line in train_lines[1:]:
+    for i, el in enumerate(line.strip().split("\t")):
+        if i < len(headers):
+            if headers[i] == "id_sense_wiki":
+                train_sense_ids.append(el)
+
+old_eval_lines = old_eval_data.readlines()
+headers = old_eval_lines[0].strip().split("\t")
+for line in old_eval_lines[1:]:
+    for i, el in enumerate(line.strip().split("\t")):
+        if i < len(headers):
+            if headers[i] == "id_sense_wiki":
+                old_eval_sense_ids.append(el)
+
+for sense_id in old_eval_sense_ids:
+    if sense_id in eval_sense_ids:
+        supp_sense_ids.append(sense_id)
+    elif sense_id in train_sense_ids:
+        supp_sense_ids.append(sense_id)
+
+for sense_id in eval_sense_ids:
+    if sense_id in old_eval_sense_ids:
+        supp_sense_ids.append(sense_id)
+    elif sense_id in train_sense_ids:
+        supp_sense_ids.append(sense_id)
+
+for sense_id in train_sense_ids:
+    if sense_id in old_eval_sense_ids:
+        supp_sense_ids.append(sense_id)
+    elif sense_id in eval_sense_ids:
+        supp_sense_ids.append(sense_id)
+
+eval_data.close()
+train_data.close()
+old_eval_data.close()
+
+print(len(supp_sense_ids))
+"""
+"""
+with open("wiki_dump.pkl", "rb") as file:
+    wiki = pickle.load(file)
+
+new_train_data = open("new_train.txt", 'r', encoding="utf-8")
+train_data = open("new_seeds_V2.txt", 'r', encoding="utf-8")
+
+sense_ids = []
+entry_ids = []
+lemmas = []
+supersenses = []
+
+new_train_lines = new_train_data.readlines()
+headers = new_train_lines[0].strip().split("\t")
+for line in new_train_lines[1:]:
+    for i, el in enumerate(line.strip().split("\t")):
+        if i < len(headers):
+            if headers[i] == "id_sense_wiki":
+                sense_ids.append(el)
+            if headers[i] == "lemma":
+                lemmas.append(el)
+            if headers[i] == "id_entry_wiki":
+                entry_ids.append(el)
+            if headers[i] == "supersense":
+                supersenses.append(el)
+
+train_lines = train_data.readlines()
+headers = train_lines[0].strip().split("\t")
+for line in train_lines[1:]:
+    for i, el in enumerate(line.strip().split("\t")):
+        if i < len(headers):
+            if headers[i] == "id_sense_wiki":
+                sense_ids.append(el)
+            if headers[i] == "lemma":
+                lemmas.append(el)
+            if headers[i] == "id_entry_wiki":
+                entry_ids.append(el)
+            if headers[i] == "supersense":
+                supersenses.append(el)
+
+train_final = open("train_data.txt", 'w', encoding="utf-8")
+
+for lemma, entry_id, sense_id, supersense in zip(lemmas, entry_ids, sense_ids, supersenses):
+    sense = wiki.lexical_senses[sense_id]
+    definition = sense.definition
+    if definition:
+        examples = sense.examples
+        sexamples = ""
+        for example in examples:
+            sexamples += example
+            sexamples += "\t"
+        sexamples = sexamples.strip("\t")
+
+        labels = sense.labels
+        slabels = ""
+        if labels:
+            for label in labels:
+                slabels += label
+                slabels += ";"
+            slabels = slabels.strip(";")
+
+        synonyms = sense.synonyms
+        ssynonyms = ""
+        if synonyms:
+            for synonym in synonyms:
+                ssynonyms += synonym
+                ssynonyms += ";"
+            ssynonyms = ssynonyms.strip(";")
+
+        train_final.write(lemma + "\t")
+        train_final.write("ok\t")
+        train_final.write(supersense + "\t")
+        train_final.write(entry_id + "\t")
+        train_final.write(sense_id + "\t")
+        train_final.write(slabels + "\t")
+        train_final.write(ssynonyms + "\t")
+        train_final.write(definition + "\t")
+        train_final.write(sexamples)
+        train_final.write("\n")
+
+train_final.close()
+"""
+
+"""
+with open("/home/nangleraud/PycharmProjects/stageM1/wiki_dump.pkl", "rb") as file:
+    wiki = pickle.load(file)
+
+new_train_data = open("/home/nangleraud/PycharmProjects/stageM1/new_train.txt", 'r', encoding="utf-8")
+train_data = open("/home/nangleraud/PycharmProjects/stageM1/new_seeds_V2.txt", 'r', encoding="utf-8")
+
+sense_ids = []
+entry_ids = []
+lemmas = []
+supersenses = []
+
+new_train_lines = new_train_data.readlines()
+headers = new_train_lines[0].strip().split("\t")
+for line in new_train_lines[1:]:
+    for i, el in enumerate(line.strip().split("\t")):
+        if i < len(headers):
+            if headers[i] == "id_sense_wiki":
+                sense_ids.append(el)
+            if headers[i] == "lemma":
+                lemmas.append(el)
+            if headers[i] == "id_entry_wiki":
+                entry_ids.append(el)
+            if headers[i] == "supersense":
+                supersenses.append(el)
+
+print(len(sense_ids))
+
+train_lines = train_data.readlines()
+headers = train_lines[0].strip().split("\t")
+for line in train_lines[1:]:
+    for i, el in enumerate(line.strip().split("\t")):
+        if i < len(headers):
+            if headers[i] == "id_sense_wiki":
+                sense_ids.append(el)
+            if headers[i] == "lemma":
+                lemmas.append(el)
+            if headers[i] == "id_entry_wiki":
+                entry_ids.append(el)
+            if headers[i] == "supersense":
+                supersenses.append(el)
+print(len(sense_ids))
+train_final = open("/home/nangleraud/PycharmProjects/stageM1/train_data.txt", 'w', encoding="utf-8")
+
+for lemma, entry_id, sense_id, supersense in zip(lemmas, entry_ids, sense_ids, supersenses):
+    sense = wiki.lexical_senses[sense_id]
+    definition = sense.definition
+    if definition:
+        examples = sense.examples
+        sexamples = ""
+        for example in examples:
+            sexamples += example
+            sexamples += "\t"
+        sexamples = sexamples.strip("\t")
+
+        labels = sense.labels
+        slabels = ""
+        if labels:
+            for label in labels:
+                slabels += label
+                slabels += ";"
+            slabels = slabels.strip(";")
+
+        synonyms = sense.synonyms
+        ssynonyms = ""
+        if synonyms:
+            for synonym in synonyms:
+                ssynonyms += synonym
+                ssynonyms += ";"
+            ssynonyms = ssynonyms.strip(";")
+
+        train_final.write(lemma + "\t")
+        train_final.write("ok\t")
+        train_final.write(supersense + "\t")
+        train_final.write(entry_id + "\t")
+        train_final.write(sense_id + "\t")
+        train_final.write(slabels + "\t")
+        train_final.write(ssynonyms + "\t")
+        train_final.write(definition + "\t")
+        train_final.write(sexamples)
+        train_final.write("\n")
+
+train_final.close()
+"""
