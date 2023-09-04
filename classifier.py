@@ -163,6 +163,22 @@ class SupersenseTagger(nn.Module):
                     if supersense in HYPERSENSES[hypersense]:
                         hypersense_correct[hypersense] += 1
 
+        if len(error_indices) > 0:
+            for i in error_indices:
+                pred_supersense = SUPERSENSES[Y_pred[i].item()]
+                gold_supersense = SUPERSENSES[Y_gold[i].item()]
+                pred_hypersenses = []
+                gold_hypersenses = []
+                for hypersense in HYPERSENSES:
+                    if pred_supersense in HYPERSENSES[hypersense]:
+                        pred_hypersenses.append(hypersense)
+                    if gold_supersense in HYPERSENSES[hypersense]:
+                        gold_hypersenses.append(hypersense)
+                for pred_hs in pred_hypersenses:
+                    for gold_hs in gold_hypersenses:
+                        if pred_hs == gold_hs:
+                            hypersense_correct[gold_hs] += 1
+
         for j in range(len(examples_batch_encodings)):
             supersense = SUPERSENSES[Y_gold[j].item()]
             supersense_dist[supersense] += 1

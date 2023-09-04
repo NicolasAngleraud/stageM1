@@ -77,13 +77,12 @@ def get_parser_args():
     parser.add_argument("main_mode", choices=['parse', 'classify'], help="Sets the main purpose of the program, that is to say parsing a file linked to seeds or use a classifier for supersense classification.")
     parser.add_argument("-device_id", choices=['0', '1', '2', '3'], help="Id of the GPU.")
     parser.add_argument('-parsing_file', default="fr_dbnary_ontolex.ttl", help='wiktionary file (dbnary dump, in turtle format) or serialized Wiktionary instance (pickle file).')
-    parser.add_argument("-checked_seeds_file", default="seeds.txt", help="")
-    parser.add_argument("-train_file", default="1_train.pkl", help="")
-    parser.add_argument("-dev_file", default="1_dev.pkl", help="")
-    parser.add_argument("-test_file", default="1_test.pkl", help="")
-    parser.add_argument("-id2data", default="1_id2data.pkl", help="")
+    parser.add_argument("-checked_seeds_file", default="train_data.txt", help="")
+    parser.add_argument("-train_file", default="train.pkl", help="")
+    parser.add_argument("-dev_file", default="dev.pkl", help="")
+    parser.add_argument("-test_file", default="test.pkl", help="")
     parser.add_argument("-corpus_file", default="sequoia.deep_and_surf.parseme.frsemcor", help="")
-    parser.add_argument('-parsing_mode', choices=['read', 'filter', 'check_seeds', 'read_and_dump', 'statistics'], help="Sets the mode for the parsing: read, filter, check_seeds or read_and_dump.")
+    parser.add_argument('-parsing_mode', choices=['read', 'filter', 'read_and_dump'], help="Sets the mode for the parsing: read, filter or read_and_dump.")
     parser.add_argument("-inference_data_file", default=None, help="File containing the data for inference.")
     parser.add_argument("-wiktionary_dump", default="wiki_dump.pkl", help="Serialized Wiktionary instance containig all the annoted data for the classifier to be trained and evaluated.")
     parser.add_argument('-v', "--trace", action="store_true", help="Toggles the verbose mode. Default=False")
@@ -119,10 +118,9 @@ if __name__ == '__main__':
             DEVICE = torch.device("cuda:" + args.device_id)
 
         # Classification program
-        with open("logs_file.txt", 'w', encoding="utf-8") as file:
+        with open("logs_file_final.txt", 'w', encoding="utf-8") as file:
             for i in range(3):
-                for def_mode in ['definition', 'definition_with_lemma']:
-                    # , 'definition_with_labels', 'definition_with_lemma_and_labels']:
+                for def_mode in ['definition', 'definition_with_lemma', 'definition_with_labels', 'definition_with_lemma_and_labels']:
                     train_examples, dev_examples, test_examples = clf.encoded_examples_split(def_mode,
                                                                                              train=args.train_file,
                                                                                              dev=args.dev_file,
