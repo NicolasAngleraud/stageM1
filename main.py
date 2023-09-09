@@ -81,6 +81,7 @@ def get_parser_args():
     parser.add_argument("-train_file", default="train.pkl", help="")
     parser.add_argument("-dev_file", default="dev.pkl", help="")
     parser.add_argument("-test_file", default="test.pkl", help="")
+    parser.add_argument("-definition_mode", choices=['definition', 'definition_with_lemma','definition_with_labels', 'definition_with_lemma_and_labels'], default="definition", help="")
     parser.add_argument("-corpus_file", default="sequoia.deep_and_surf.parseme.frsemcor", help="")
     parser.add_argument('-parsing_mode', choices=['read', 'filter', 'read_and_dump'], help="Sets the mode for the parsing: read, filter or read_and_dump.")
     parser.add_argument("-inference_data_file", default=None, help="File containing the data for inference.")
@@ -117,48 +118,47 @@ if __name__ == '__main__':
         if torch.cuda.is_available():
             DEVICE = torch.device("cuda:" + args.device_id)
 
+        def_mode = args.definition_mode
+
         # Classification program
         with open("logs_file.txt", 'w', encoding="utf-8") as file:
             for i in range(1):
-                for def_mode in ['definition_with_lemma']:
-                    # 'definition',  , 'definition_with_labels', 'definition_with_lemma_and_labels']:
-                    train_examples, dev_examples, test_examples = clf.encoded_examples_split(def_mode,
-                                                                                             train=args.train_file,
-                                                                                             dev=args.dev_file,
-                                                                                             test=args.test_file)
-                    # for lr in [0.005, 0.001, 0.0005, 0.0001, 0.00005, 0.00001]:
-                    # for lr in [0.00002, 0.00001, 0.000005, 0.000001, 0.0000005]:
-                    for lr in [0.00002]:
-                        for patience in [3]:
+                train_examples, dev_examples, test_examples = clf.encoded_examples_split(def_mode,
+                                                                                         train=args.train_file,
+                                                                                         dev=args.dev_file,
+                                                                                         test=args.test_file)
+                # for lr in [0.005, 0.001, 0.0005, 0.0001, 0.00005, 0.00001]:
+                for lr in [0.0001, 0.00005, 0.00002, 0.00001, 0.000005, 0.000001, 0.0000005, 0.0000001, 0.00000001, 0.000000001]:
+                    for patience in [5]:
 
-                            print("")
-                            print(f"run {i+1} : lr = {lr}; mode = {def_mode}")
-                            print("")
+                        print("")
+                        print(f"run {i+1} : lr = {lr}; mode = {def_mode}")
+                        print("")
 
-                            hypersense_dist = {hypersense: 0 for hypersense in HYPERSENSES}
-                            hypersense_correct = {hypersense: 0 for hypersense in HYPERSENSES}
-                            supersense_dist = {supersense: 0 for supersense in SUPERSENSES}
-                            supersense_correct = {supersense: 0 for supersense in SUPERSENSES}
+                        hypersense_dist = {hypersense: 0 for hypersense in HYPERSENSES}
+                        hypersense_correct = {hypersense: 0 for hypersense in HYPERSENSES}
+                        supersense_dist = {supersense: 0 for supersense in SUPERSENSES}
+                        supersense_correct = {supersense: 0 for supersense in SUPERSENSES}
 
-                            params = Parameters(lr=lr, definition_mode=def_mode, patience=patience, frozen=False)
+                        params = Parameters(lr=lr, definition_mode=def_mode, patience=patience, frozen=False)
 
-                            file.write(f"run:{i + 1};")
+                        file.write(f"run:{i + 1};")
 
-                            classifier = clf.SupersenseTagger(params, DEVICE)
-                            clf.training(params, train_examples, dev_examples, classifier, DEVICE, file)
-                            clf.evaluation(dev_examples, classifier, DEVICE, file, supersense_dist,
-                                           supersense_correct, hypersense_dist, hypersense_correct)
+                        classifier = clf.SupersenseTagger(params, DEVICE)
+                        clf.training(params, train_examples, dev_examples, classifier, DEVICE, file)
+                        clf.evaluation(dev_examples, classifier, DEVICE, file, supersense_dist,
+                                       supersense_correct, hypersense_dist, hypersense_correct)
 
-                            sequoia_baseline = clf.MostFrequentSequoia(args.corpus_file)
-                            train_baseline = clf.MostFrequentTrainingData(args.train_file)
-                            wiki_baseline = clf.MostFrequentWiktionary(args.wiktionary_dump)
+                        sequoia_baseline = clf.MostFrequentSequoia(args.corpus_file)
+                        train_baseline = clf.MostFrequentTrainingData(args.train_file)
+                        wiki_baseline = clf.MostFrequentWiktionary(args.wiktionary_dump)
 
-                            sequoia_baseline.training()
-                            train_baseline.training()
-                            wiki_baseline.training()
+                        sequoia_baseline.training()
+                        train_baseline.training()
+                        wiki_baseline.training()
 
-                            file.write(f"sequoia_baseline:{sequoia_baseline.evaluation(args.dev_file)};")
-                            file.write(f"train_baseline:{train_baseline.evaluation(args.dev_file)};")
-                            file.write(f"wiki_baseline:{wiki_baseline.evaluation(args.dev_file)};")
+                        file.write(f"sequoia_baseline:{sequoia_baseline.evaluation(args.dev_file)};")
+                        file.write(f"train_baseline:{train_baseline.evaluation(args.dev_file)};")
+                        file.write(f"wiki_baseline:{wiki_baseline.evaluation(args.dev_file)};")
 
-                            file.write("\n")
+                        file.write("\n")
