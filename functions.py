@@ -1054,3 +1054,92 @@ for lemma, entry_id, sense_id, supersense in zip(lemmas, entry_ids, sense_ids, s
 
 train_final.close()
 """
+
+"""
+with open("train.pkl", 'rb') as file:
+    train_examples = pickle.load(file)
+with open("dev.pkl", 'rb') as file:
+    dev_examples = pickle.load(file)
+with open("test.pkl", 'rb') as file:
+    test_examples = pickle.load(file)
+
+
+    for dev in dev_examples:
+        for test in test_examples:
+            if tr['definition'] == dev['definition']:
+                print(tr['definition'])
+            if tr['definition'] == test['definition']:
+                print(tr['definition'])
+            if test['definition'] == dev['definition']:
+                print(test['definition'])
+"""
+"""
+train_data = open("train_data.txt", 'r', encoding="utf-8")
+eval_data = open("eval_data.txt", 'r', encoding="utf-8")
+
+eval_sense_ids = []
+train_sense_ids = []
+supp_sense_ids = []
+
+eval_lines = eval_data.readlines()
+headers = eval_lines[0].strip().split("\t")
+for line in eval_lines[1:]:
+    for i, el in enumerate(line.strip().split("\t")):
+        if i < len(headers):
+            if headers[i] == "id_sense_wiki":
+                if el in eval_sense_ids:
+                    print(el)
+                eval_sense_ids.append(el)
+
+train_lines = train_data.readlines()
+headers = train_lines[0].strip().split("\t")
+for line in train_lines[1:]:
+    for i, el in enumerate(line.strip().split("\t")):
+        if i < len(headers):
+            if headers[i] == "id_sense_wiki":
+                train_sense_ids.append(el)
+
+for sense_id in eval_sense_ids:
+    if sense_id in train_sense_ids:
+        supp_sense_ids.append(sense_id)
+
+for sense_id in train_sense_ids:
+    if sense_id in eval_sense_ids:
+        supp_sense_ids.append(sense_id)
+
+eval_data.close()
+train_data.close()
+
+print(len(supp_sense_ids))
+
+print(len(train_sense_ids))
+print(len(set(train_sense_ids)))
+
+print(len(eval_sense_ids))
+print(len(set(eval_sense_ids)))
+"""
+
+"""
+
+with open("train.pkl", 'rb') as file:
+    train_examples = pickle.load(file)
+with open("dev.pkl", 'rb') as file:
+    dev_examples = pickle.load(file)
+with open("test.pkl", 'rb') as file:
+    test_examples = pickle.load(file)
+
+print(len(train_examples))
+print(len(dev_examples))
+print(len(test_examples))
+
+
+for tr in train_examples:
+    for dev in dev_examples:
+        if tr['definition'] == dev['definition']:
+            print(tr['definition'])
+        for test in test_examples:
+            if tr['definition'] == test['definition']:
+                print(tr['definition'])
+            if test['definition'] == dev['definition']:
+                print(test['definition'])
+"""
