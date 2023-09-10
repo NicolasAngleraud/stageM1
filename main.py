@@ -122,13 +122,13 @@ if __name__ == '__main__':
 
         # Classification program
         with open("logs_file.txt", 'w', encoding="utf-8") as file:
-            for i in range(1):
+            for i in range(5):
                 train_examples, dev_examples, test_examples = clf.encoded_examples_split(def_mode,
                                                                                          train=args.train_file,
                                                                                          dev=args.dev_file,
                                                                                          test=args.test_file)
                 # for lr in [0.005, 0.001, 0.0005, 0.0001, 0.00005, 0.00001]:
-                for lr in [0.0001, 0.00005, 0.00002, 0.00001, 0.000005, 0.000001, 0.0000005, 0.0000001, 0.00000001, 0.000000001]:
+                for lr in [0.00005, 0.00002, 0.00001, 0.000005, 0.000001, 0.0000005]:
                     for patience in [5]:
 
                         print("")
