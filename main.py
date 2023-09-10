@@ -81,6 +81,7 @@ def get_parser_args():
     parser.add_argument("-train_file", default="train.pkl", help="")
     parser.add_argument("-dev_file", default="dev.pkl", help="")
     parser.add_argument("-test_file", default="test.pkl", help="")
+    parser.add_argument("-logs_file_name", default="logs_file.txt", help="")
     parser.add_argument("-definition_mode", choices=['definition', 'definition_with_lemma','definition_with_labels', 'definition_with_lemma_and_labels'], default="definition", help="")
     parser.add_argument("-corpus_file", default="sequoia.deep_and_surf.parseme.frsemcor", help="")
     parser.add_argument('-parsing_mode', choices=['read', 'filter', 'read_and_dump'], help="Sets the mode for the parsing: read, filter or read_and_dump.")
@@ -119,17 +120,21 @@ if __name__ == '__main__':
             DEVICE = torch.device("cuda:" + args.device_id)
 
         def_mode = args.definition_mode
+        logs_file = args.logs_file_name
+        nb_runs = 5
+        patiences = [3]
+        lrs = [0.000025, 0.000024, 0.000023, 0.000022, 0.000021, 0.00002, 0.0000175]
+        # lrs = [0.005, 0.001, 0.0005, 0.0001, 0.00005, 0.00001]
 
         # Classification program
-        with open("logs_file.txt", 'w', encoding="utf-8") as file:
-            for i in range(5):
+        with open(logs_file, 'w', encoding="utf-8") as file:
+            for i in range(nb_runs):
                 train_examples, dev_examples, test_examples = clf.encoded_examples_split(def_mode,
                                                                                          train=args.train_file,
                                                                                          dev=args.dev_file,
                                                                                          test=args.test_file)
-                # for lr in [0.005, 0.001, 0.0005, 0.0001, 0.00005, 0.00001]:
-                for lr in [0.00005, 0.00003, 0.00002, 0.00001, 0.000005, 0.000001]:
-                    for patience in [5]:
+                for lr in lrs:
+                    for patience in patiences:
 
                         print("")
                         print(f"run {i+1} : lr = {lr}; mode = {def_mode}")
