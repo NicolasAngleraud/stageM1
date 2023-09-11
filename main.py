@@ -123,8 +123,9 @@ if __name__ == '__main__':
         logs_file = args.logs_file_name
         nb_runs = 5
         patiences = [3]
-        lrs = [0.000025, 0.000024, 0.000023, 0.000022, 0.000021, 0.00002, 0.0000175]
-        # lrs = [0.005, 0.001, 0.0005, 0.0001, 0.00005, 0.00001]
+        frozen = True
+        # lrs = [0.000025, 0.000024, 0.000023, 0.000022, 0.000021, 0.00002, 0.0000175]
+        lrs = [0.005, 0.001, 0.0005, 0.0001, 0.00005, 0.00001]
 
         # Classification program
         with open(logs_file, 'w', encoding="utf-8") as file:
@@ -145,7 +146,7 @@ if __name__ == '__main__':
                         supersense_dist = {supersense: 0 for supersense in SUPERSENSES}
                         supersense_correct = {supersense: 0 for supersense in SUPERSENSES}
 
-                        params = Parameters(lr=lr, definition_mode=def_mode, patience=patience, frozen=False)
+                        params = Parameters(lr=lr, definition_mode=def_mode, patience=patience, frozen=frozen)
 
                         file.write(f"run:{i + 1};")
 
