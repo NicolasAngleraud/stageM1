@@ -107,6 +107,8 @@ class SupersenseTagger(nn.Module):
         # definition of the parameters for the linear operation between the hidden layer and the output layer
         self.linear_2 = nn.Linear(self.hidden_layer_size, self.output_size).to(DEVICE)
 
+        self.tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+
     def forward(self, padded_encodings): #@@ prendre en entrée un tenseur de taille batch_size, max_seq_length_for_this_batch
 
         # the tokenization encoding is given to the FlauBERT model which outputs the contextual embeddings for every definition
@@ -132,7 +134,7 @@ class SupersenseTagger(nn.Module):
             predicted_indices = torch.argmax(log_probs, dim=1).tolist()
         return [SUPERSENSES[i] for i in predicted_indices]
 
-    def evaluate(self, examples_batch_encodings, DEVICE, supersense_dist, supersense_correct, hypersense_dist, hypersense_correct):
+    def evaluate(self, examples_batch_encodings, DEVICE, supersense_dist, supersense_correct, hypersense_dist, hypersense_correct, def_errors, run, dataset):
         with torch.no_grad():
             X, Y = zip(*examples_batch_encodings)
             X = pad_batch(X, padding_token_id=PADDING_TOKEN_ID).to(DEVICE)
@@ -178,6 +180,13 @@ class SupersenseTagger(nn.Module):
                     for gold_hs in gold_hypersenses:
                         if pred_hs == gold_hs:
                             hypersense_correct[gold_hs] += 1
+                def_errors.append(
+                    {"run":run,
+                     "dataset": dataset, 
+                     "definition":self.tokenizer.decode(X[i], skip_special_tokens=True),
+                     "pred_sp": SUPERSENSES[Y_pred[i].item()],
+                     "gold_sp": SUPERSENSES[Y_gold[i].item()]}
+                     )
 
         for j in range(len(examples_batch_encodings)):
             supersense = SUPERSENSES[Y_gold[j].item()]
@@ -189,12 +198,14 @@ class SupersenseTagger(nn.Module):
         return errors, torch.sum((Y_pred == Y_gold).int()).item()
 
 
-def training(parameters, train_examples, dev_examples, classifier, DEVICE, file):
+def training(parameters, train_examples, dev_examples, classifier, DEVICE, dev_data, test_data, test_2_data):
     # get every parameter in a local variable
     for param in parameters.keys:
         locals()[param] = getattr(parameters, param)
         # print(param, locals()[param])
-        file.write(f"{param}:{locals()[param]};")
+        dev_data[param] = locals()[param]
+        test_data[param] = locals()[param]
+        test_2_data[param] = locals()[param]
 
     # instance of NSupersenseTagger
     my_supersense_tagger = classifier
@@ -270,20 +281,33 @@ def training(parameters, train_examples, dev_examples, classifier, DEVICE, file)
         if epoch > locals()["patience"]:
             if all(dev_losses[i] > dev_losses[i - 1] for i in range(-1, -locals()["patience"], -1)):
                 # print(f"EARLY STOPPING: EPOCH = {epoch}")
-                file.write(f"EARLY STOPPING:EPOCH = {epoch};")
+                dev_data["early_stopping"] = epoch
+                test_data["early_stopping"] = epoch
+                test_2_data["early_stopping"] = epoch
                 break
 
     # print(f"Train losses = {[round(train_loss, 2) for train_loss in train_losses]}")
-    file.write(f"Train losses:{[round(train_loss, 2) for train_loss in train_losses]};")
+    dev_data["train_losses"] = [round(train_loss, 2) for train_loss in train_losses]
+    test_data["train_losses"] = [round(train_loss, 2) for train_loss in train_losses]
+    test_2_data["train_losses"] = [round(train_loss, 2) for train_loss in train_losses]
+
     # print(f"Dev losses = {[round(dev_loss, 2) for dev_loss in dev_losses]}")
-    file.write(f"Dev losses:{[round(dev_loss, 2) for dev_loss in dev_losses]};")
+    dev_data["dev_losses"] = [round(dev_loss, 2) for dev_loss in dev_losses]
+    test_data["dev_losses"] = [round(dev_loss, 2) for dev_loss in dev_losses]
+    test_2_data["dev_losses"] = [round(dev_loss, 2) for dev_loss in dev_losses]
+
     # print(f"Train accuracies = {[round(train_accuracy, 2) for train_accuracy in train_accuracies]}")
-    file.write(f"Train accuracies:{[round(train_accuracy, 2) for train_accuracy in train_accuracies]};")
+    dev_data["train_accuracies"] = [round(train_accuracy, 2) for train_accuracy in train_accuracies]
+    test_data["train_accuracies"] = [round(train_accuracy, 2) for train_accuracy in train_accuracies]
+    test_2_data["train_accuracies"] = [round(train_accuracy, 2) for train_accuracy in train_accuracies]
+   
     # print(f"Dev accuracies = {[round(dev_accuracy, 2) for dev_accuracy in dev_accuracies]}")
-    file.write(f"Dev accuracies:{[round(dev_accuracy, 2) for dev_accuracy in dev_accuracies]};")
+    dev_data["dev_accuracies"] = [round(dev_accuracy, 2) for dev_accuracy in dev_accuracies]
+    test_data["dev_accurcies"] = [round(dev_accuracy, 2) for dev_accuracy in dev_accuracies]
+    test_2_data["dev_accuracies"] = [round(dev_accuracy, 2) for dev_accuracy in dev_accuracies]
 
 
-def evaluation(examples, classifier, DEVICE, file, supersense_dist, supersense_correct, hypersense_dist, hypersense_correct):
+def evaluation(examples, classifier, DEVICE, supersense_dist, supersense_correct, hypersense_dist, hypersense_correct, def_errors, run, dataset, data):
     batch_size =25
     i = 0
     nb_good_preds = 0
@@ -291,29 +315,38 @@ def evaluation(examples, classifier, DEVICE, file, supersense_dist, supersense_c
     while i < len(examples):
         evaluation_batch = examples[i: i + batch_size]
         i += batch_size
-        partial_errors_list, partial_nb_good_preds = classifier.evaluate(evaluation_batch, DEVICE, supersense_dist, supersense_correct, hypersense_dist, hypersense_correct)
+        partial_errors_list, partial_nb_good_preds = classifier.evaluate(evaluation_batch, DEVICE, supersense_dist, supersense_correct, hypersense_dist, hypersense_correct, def_errors, run, dataset)
         errors_list += partial_errors_list
         nb_good_preds += partial_nb_good_preds
 
     # print(f"ACCURACY test set = {nb_good_preds/len(examples)}")
-    file.write(f"ACCURACY:{nb_good_preds/len(examples)};")
+    data["accuracy"] = nb_good_preds/len(examples)
+
+    good_preds_hs = 0
+    for hypersense in HYPERSENSES:
+        good_preds_hs += hypersense_correct[hypersense]
+
+    data["accuracy_hs"] = good_preds_hs/len(examples)
+
 
     counter = Counter(errors_list)
     most_common_errors = counter.most_common(10)
     # print(f"Erreurs les plus courantes: {most_common_errors}")
-    file.write(f"ERRORS:{most_common_errors};")
+    data["most_commons_errors"] = most_common_errors
 
     for supersense in supersense_dist:
         if supersense_dist[supersense] > 0:
-            file.write(f"Accuracy for {supersense}:{supersense_correct[supersense]/supersense_dist[supersense]};")
+            data[supersense] = supersense_correct[supersense]/supersense_dist[supersense]
         else:
-            file.write(f"No supersense {supersense};")
+            # data[supersense] = "nan"
+            p = True
 
     for hypersense in hypersense_dist:
         if hypersense_dist[hypersense] > 0:
-            file.write(f"Accuracy for {hypersense}:{hypersense_correct[hypersense]/hypersense_dist[hypersense]};")
+            data[hypersense] = hypersense_correct[hypersense]/hypersense_dist[hypersense]
         else:
-            file.write(f"No hypersense {hypersense};")
+            # data[hypersense] = "nan"
+            p = True
 
 
 def inference(inference_data_set, classifier, DEVICE):
