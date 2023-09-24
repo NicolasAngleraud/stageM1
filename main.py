@@ -141,9 +141,9 @@ if __name__ == '__main__':
             for lr in lrs:
                 for patience in patiences:
 
-                    dev_data = []
-                    test_data = []
-                    test_2_data = []
+                    dev_data = {}
+                    test_data = {}
+                    test_2_data = {}
 
 
                     print("")
