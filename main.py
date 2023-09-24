@@ -76,7 +76,6 @@ def get_parser_args():
     parser.add_argument("-dev_file", default="dev.pkl", help="")
     parser.add_argument("-test_file", default="test.pkl", help="")
     parser.add_argument("-test_file_2", default="test_2.pkl", help="")
-    parser.add_argument("-logs_file_name", default="logs_file.txt", help="")
     parser.add_argument("-def_errors", action="store_true", help="Writes a xlsx file containing the description of the examples wrongly predicted by the classifier during evalutation.")
     parser.add_argument("-definition_mode", choices=['definition', 'definition_with_lemma','definition_with_labels', 'definition_with_lemma_and_labels'], default="definition", help="")
     parser.add_argument("-corpus_file", default="sequoia.deep_and_surf.parseme.frsemcor", help="")
@@ -120,7 +119,6 @@ if __name__ == '__main__':
             DEVICE = torch.device("cuda:" + args.device_id)
 
         def_mode = args.definition_mode
-        logs_file = args.logs_file_name
         nb_runs = 1
         patiences = [3]
         frozen = False
@@ -143,9 +141,9 @@ if __name__ == '__main__':
             for lr in lrs:
                 for patience in patiences:
 
-                    dev_data = {}
-                    test_data = {}
-                    test_2_data = {}
+                    dev_data = []
+                    test_data = []
+                    test_2_data = []
 
 
                     print("")
@@ -204,6 +202,10 @@ if __name__ == '__main__':
                     dev_data["wiki_baseline"] = wiki_baseline.evaluation(args.dev_file)
                     test_data["wiki_baseline"] = wiki_baseline.evaluation(args.test_file)
                     test_2_data["wiki_baseline"] = wiki_baseline.evaluation(args.test_file_2)
+
+                    df_dev.append(dev_data)
+                    df_test.append(test_data)
+                    df_test_2.append(test_2_data)
         
         # dev
         df = pd.DataFrame(df_dev)

@@ -135,6 +135,7 @@ class SupersenseTagger(nn.Module):
         return [SUPERSENSES[i] for i in predicted_indices]
 
     def evaluate(self, examples_batch_encodings, DEVICE, supersense_dist, supersense_correct, hypersense_dist, hypersense_correct, def_errors, run, dataset):
+        good_pred_hs = 0
         with torch.no_grad():
             X, Y = zip(*examples_batch_encodings)
             X = pad_batch(X, padding_token_id=PADDING_TOKEN_ID).to(DEVICE)
@@ -194,8 +195,19 @@ class SupersenseTagger(nn.Module):
             for hypersense in HYPERSENSES:
                 if supersense in HYPERSENSES[hypersense]:
                     hypersense_dist[hypersense] += 1
+            
+            pred_supersense = SUPERSENSES[Y_pred[j].item()]
+            gold_supersense = SUPERSENSES[Y_gold[j].item()]
+            pred_hypersenses = []
+            gold_hypersenses = []
+            for hypersense in HYPERSENSES:
+                if pred_supersense in HYPERSENSES[hypersense]:
+                    pred_hypersenses.append(hypersense)
+                if gold_supersense in HYPERSENSES[hypersense]:
+                    gold_hypersenses.append(hypersense)        
+            good_pred_hs += int(bool(set(pred_hypersenses).intersection(gold_hypersenses)))
 
-        return errors, torch.sum((Y_pred == Y_gold).int()).item()
+        return errors, torch.sum((Y_pred == Y_gold).int()).item(), good_pred_hs
 
 
 def training(parameters, train_examples, dev_examples, classifier, DEVICE, dev_data, test_data, test_2_data):
@@ -311,22 +323,20 @@ def evaluation(examples, classifier, DEVICE, supersense_dist, supersense_correct
     batch_size =25
     i = 0
     nb_good_preds = 0
+    nb_good_preds_hs = 0
     errors_list = []
     while i < len(examples):
         evaluation_batch = examples[i: i + batch_size]
         i += batch_size
-        partial_errors_list, partial_nb_good_preds = classifier.evaluate(evaluation_batch, DEVICE, supersense_dist, supersense_correct, hypersense_dist, hypersense_correct, def_errors, run, dataset)
+        partial_errors_list, partial_nb_good_preds, partial_good_hs_pred = classifier.evaluate(evaluation_batch, DEVICE, supersense_dist, supersense_correct, hypersense_dist, hypersense_correct, def_errors, run, dataset)
         errors_list += partial_errors_list
         nb_good_preds += partial_nb_good_preds
+        nb_good_preds_hs += partial_good_hs_pred
 
     # print(f"ACCURACY test set = {nb_good_preds/len(examples)}")
     data["accuracy"] = nb_good_preds/len(examples)
 
-    good_preds_hs = 0
-    for hypersense in HYPERSENSES:
-        good_preds_hs += hypersense_correct[hypersense]
-
-    data["accuracy_hs"] = good_preds_hs/len(examples)
+    data["accuracy_hs"] = nb_good_preds_hs/len(examples)
 
 
     counter = Counter(errors_list)
