@@ -119,7 +119,7 @@ if __name__ == '__main__':
             DEVICE = torch.device("cuda:" + args.device_id)
 
         def_mode = args.definition_mode
-        nb_runs = 1
+        nb_runs = 5
         patiences = [3]
         frozen = False
         lrs = [0.000024]

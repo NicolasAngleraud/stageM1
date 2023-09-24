@@ -185,8 +185,8 @@ class SupersenseTagger(nn.Module):
                     {"run":run,
                      "dataset": dataset, 
                      "definition":self.tokenizer.decode(X[i], skip_special_tokens=True),
-                     "pred_sp": SUPERSENSES[Y_pred[i].item()],
-                     "gold_sp": SUPERSENSES[Y_gold[i].item()]}
+                     "pred_supersense": SUPERSENSES[Y_pred[i].item()],
+                     "gold_supersense": SUPERSENSES[Y_gold[i].item()]}
                      )
 
         for j in range(len(examples_batch_encodings)):
