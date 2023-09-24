@@ -61,7 +61,7 @@ class Parameters:
         self.lr = lr
         self.frozen = frozen
         self.max_seq_length = max_seq_length
-        # self.window_example = window_example
+        self.window_example = window_example
         self.definition_mode = definition_mode
         self.keys = ["nb_epochs", "batch_size", "hidden_layer_size", "patience", "lr", "frozen", "max_seq_length", "window_example", "definition_mode"]
 
