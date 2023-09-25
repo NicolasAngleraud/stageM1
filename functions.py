@@ -1143,3 +1143,95 @@ for tr in train_examples:
             if test['definition'] == dev['definition']:
                 print(test['definition'])
 """
+"""
+train_data = open("train_data.txt", 'r', encoding="utf-8")
+eval_data = open("eval_data.txt", 'r', encoding="utf-8")
+test_data = open("test_set_2.txt", 'r', encoding="utf-8")
+
+eval_sense_ids = []
+train_sense_ids = []
+test_sense_ids = []
+supp_sense_ids = []
+
+eval_lines = eval_data.readlines()
+headers = eval_lines[0].strip().split("\t")
+for line in eval_lines[1:]:
+    for i, el in enumerate(line.strip().split("\t")):
+        if i < len(headers):
+            if headers[i] == "id_sense_wiki":
+                eval_sense_ids.append(el)
+
+train_lines = train_data.readlines()
+headers = train_lines[0].strip().split("\t")
+for line in train_lines[1:]:
+    for i, el in enumerate(line.strip().split("\t")):
+        if i < len(headers):
+            if headers[i] == "id_sense_wiki":
+                train_sense_ids.append(el)
+
+test_lines = test_data.readlines()
+headers = test_lines[0].strip().split("\t")
+for line in test_lines[1:]:
+    for i, el in enumerate(line.strip().split("\t")):
+        if i < len(headers):
+            if headers[i] == "id_sense_wiki":
+                test_sense_ids.append(el)
+
+for sense_id in eval_sense_ids:
+    if sense_id in train_sense_ids:
+        supp_sense_ids.append(sense_id)
+
+for sense_id in train_sense_ids:
+    if sense_id in eval_sense_ids:
+        supp_sense_ids.append(sense_id)
+
+for sense_id in test_sense_ids:
+    if sense_id in eval_sense_ids:
+        supp_sense_ids.append(sense_id)
+    if sense_id in train_sense_ids:
+        supp_sense_ids.append(sense_id)
+
+eval_data.close()
+train_data.close()
+test_data.close()
+
+print(len(supp_sense_ids))
+
+print(len(train_sense_ids))
+print(len(set(train_sense_ids)))
+
+print(len(eval_sense_ids))
+print(len(set(eval_sense_ids)))
+
+print(len(test_sense_ids))
+print(len(set(test_sense_ids)))
+"""
+"""
+with open("train.pkl", 'rb') as file:
+    train_examples = pickle.load(file)
+with open("dev.pkl", 'rb') as file:
+    dev_examples = pickle.load(file)
+with open("test_2.pkl", 'rb') as file:
+    test_examples = pickle.load(file)
+
+train_senses = []
+dev_senses = []
+test_senses = []
+
+for tr in train_examples:
+    train_senses.append(tr["definition"])
+for dev in dev_examples:
+    dev_senses.append(dev["definition"])
+for test in test_examples:
+    test_senses.append(test["definition"])
+
+print(len(train_senses))
+print(len(set(train_senses)))
+print(len(dev_senses))
+print(len(set(dev_senses)))
+print(len(test_senses))
+print(len(set(test_senses)))
+
+import collections
+print([item for item, count in collections.Counter(train_senses).items() if count > 1])
+"""
