@@ -1235,3 +1235,73 @@ print(len(set(test_senses)))
 import collections
 print([item for item, count in collections.Counter(train_senses).items() if count > 1])
 """
+"""
+import pandas as pd
+import pickle
+
+def create_dataframe_from_pickle(pickle_file):
+    try:
+        # Read the list of dictionaries from the pickle file
+        with open(pickle_file, 'rb') as file:
+            data = pickle.load(file)
+
+        # Convert the list of dictionaries into a DataFrame
+        df = pd.DataFrame(data)
+
+        return df
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+        return None
+
+# Usage example:
+pickle_file = 'dev.pkl'  # Replace with your pickle file path
+data_frame = create_dataframe_from_pickle(pickle_file)
+
+if data_frame is not None:
+    # Now you can work with the data_frame
+    print(data_frame.head())  # Print the first few rows of the DataFrame
+
+
+print(data_frame["supersense"].value_counts())
+print(data_frame["supersense"].value_counts().sum())
+"""
+"""
+import pandas as pd
+import pickle
+
+# Define the function to create a DataFrame from a pickle file
+def create_dataframe_from_pickle(pickle_file):
+    try:
+        with open(pickle_file, 'rb') as file:
+            data = pickle.load(file)
+        df = pd.DataFrame(data)
+        return df
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+        return None
+
+# List of file names for your data
+data_files = ['train.pkl', 'dev.pkl', 'test.pkl', 'test_2.pkl']
+
+# Create an empty DataFrame to store the combined distribution
+combined_distribution = pd.DataFrame(columns=["File", "Supersense", "Count"])
+
+# Iterate through the data files and calculate the supersense distribution for each
+for file_name in data_files:
+    # Load the data into a DataFrame
+    data_frame = create_dataframe_from_pickle(file_name)
+
+    if data_frame is not None:
+        # Calculate the supersense distribution for the current file
+        distribution = data_frame["supersense"].value_counts().reset_index()
+        print(data_frame["supersense"].value_counts().sum())
+        distribution.columns = ["Supersense", "Count"]
+        # Remove ".pkl" from the file name in the "File" column
+        distribution["File"] = file_name.replace('.pkl', '')
+        combined_distribution = pd.concat([combined_distribution, distribution], ignore_index=True)
+
+# Save the combined distribution to an Excel file
+excel_filename = 'combined_supersense_distribution.xlsx'
+combined_distribution.to_excel(excel_filename, sheet_name='Combined Distribution', index=False)
+"""
+
