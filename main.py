@@ -18,7 +18,7 @@ HYPERSENSES = {"dynamic_situation": ["act", "event", "phenomenon", "act*cognitio
                "inanimate_entity": ["artifact", "food", "body", "object", "plant", "substance", "artifact*cognition"],
                "informational_object": ["cognition", "communication", "act*cognition", "artifact*cognition"],
                "quantification": ["quantity", "part", "group", "groupxperson"],
-               "other": ["institution", "possesion", "time"]
+               "other": ["institution", "possession", "time"]
                }
 
 # relations to be acknowledged while reading wiktionary ttl files
